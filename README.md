@@ -1,4 +1,5 @@
-# Position de l'ISS
+# Modélisation des forces perturbatrices en orbite terrestre basse
+## Application à la Station Spatiale Internationale
 
 Projet de Modélisation Numérique en Physique
 
@@ -6,9 +7,6 @@ Projet de Modélisation Numérique en Physique
 
 ---
 
-Objectifs actuels :
-* Représenter sur un planisphère la trajectoire de l'ISS
-* À partir de données collectées sur les jeux de données de la NASA
-* Inférence d'orbite
+Pour tout suivre, tout savoir : [Tableau Trello du projet](https://trello.com/b/R6sQiqS1/groupe-2-leprovost-maubian)
 
 ![](http://www.alpine-geckos.at/wp-content/uploads/2010/03/iss-modules-150x150.jpg)
