@@ -1,5 +1,6 @@
 from contextlib import contextmanager
-
+import os
+import requests
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,9 +34,35 @@ def worldmap(transparency=.5):
 
 class ISS_Position:
     """Classe d'extraction des données de position de l'ISS."""
-    def __init__(self, filename="ISS.OEM_J2K_EPH.txt"):
-        """Reçoit en paramètre le nom du fichier de données. Utilise "ISS.OEM_J2K_EPH.txt" par défaut."""
+    def __init__(self, filename=None, force_download=False):
+        """Réalise une extraction de données d'un fichier source de coordonnées de l'ISS.
+        
+        La lecture s'effectue depuis un fichier local si spécifié. Dans le cas contraire, le fichier est téléchargé
+        depuis `https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.txt` si il
+        n'existe pas déjà un téléchargement local de ce fichier.
+        
+        Paramètres:
+        - filename: Spécifie le fichier local à utiliser comme source de données.
+        - force_download: Force le téléchargement du fichier même s'il existe déjà en local.
+        """
+        if not filename:
+            # En l'absence de fichié spécifié, génère le nom de fichier local du jour
+            filename = f"ISS.OEM_J2K_EPH_{pd.Timestamp.today().strftime('%Y%m%d')}.txt"
+            # Télécharge le fichier du jour s'il est absent ou si le téléchargement est forcé
+            if force_download or not os.path.exists(filename):
+                self.__download(filename)
+        # Parse le contenu du fichier
         self.__parse_source(filename)
+    
+    def __download(self, filename):
+        """Télécharge le fichier de coordonnées de l'ISS depuis le serveur public de la NASA."""
+        # Permalien du fichier
+        url = "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.txt"
+        # Téléchargement en mémoire du fichier
+        myfile = requests.get(url)
+        # Ecriture en fichier local
+        with open(filename, 'wb') as file:
+            file.write(myfile.content)
         
     def __parse_source(self, filename):
         """Analyse syntaxique du fichier."""
@@ -100,16 +127,37 @@ class ISS_Position:
 
 
     def get_metadata(self):
-        # Retourne les métadonnées en utilisant un DataFrame (pour son rendu élégant à l'affichage)
+        """Retourne les métadonnées en utilisant un DataFrame (pour son rendu élégant à l'affichage)."""
         return pd.DataFrame(self.meta.values(), self.meta.keys(), ['Metadata'])
     
     def get_comments(self):
-        # Retourne les commentaires en tant que bloc de texte avec retours à la ligne
+        """Retourne les commentaires en tant que bloc de texte avec retours à la ligne."""
         return '\n'.join(self.comments)
     
     def get_data(self):
-        # Retourne le DataFrame des données
+        """Retourne le DataFrame des données"""
         return self.data
+
+    def __repr__(self):
+        """Représentation en string de l'objet."""
+        return fr"ISS coordinates from {self.meta['START_TIME']} to {self.meta['STOP_TIME']}"
+    
+    def _repr_html_(self):
+        """Représentation riche en HTML de l'objet."""
+        start_date = self.meta['START_TIME'].strftime('%d/%m/%Y')
+        stop_date = self.meta['STOP_TIME'].strftime('%d/%m/%Y') 
+        return (r"<div style='border:4px #eee outset;background:#fcfcfc;padding:1px 10px 10px'>"
+                fr"<h4 style='padding-left:10px'>Coordonnées de l'ISS du {start_date} au {stop_date}</h4>"
+                fr"{self.__repr_thrust_episode()}</div>")
+
+    def __repr_thrust_episode(self):
+        """Représentation des épisodes de poussées en tant que DataFrame."""
+        df = pd.DataFrame([self.data.groupby('thrust_episode').min().datetime.rename('Début'),
+                           self.data.groupby('thrust_episode').max().datetime.rename('Fin')]).T
+        df['Durée'] = df['Fin'] - df['Début']
+        df.index = df.index.map(lambda x: f"Episode {x} : " + ("Poussée moteurs" if x%2
+                                                               else "Mouvement libre")).rename(None)
+        return df.to_html()
 
 
 @contextmanager
@@ -137,7 +185,7 @@ def orbital_visualization():
     fig = go.Figure(meridians + [axis, surface])
     # Template pour afficher les scatter3d en mode ligne par défaut
     orbit_template = go.layout.Template()
-    orbit_template.data.scatter3d = [go.Scatter3d(mode="lines", line_width=3)]
+    orbit_template.data.scatter3d = [go.Scatter3d(mode="lines", line_width=3, hoverinfo='skip')]
     # Supression des plans d'axes en arrière-plan
     fig.update_scenes(xaxis_visible=False, yaxis_visible=False,zaxis_visible=False)
     # Paramètrage d'une caméra au plus près de la Terre
