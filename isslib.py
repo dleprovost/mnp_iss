@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 import os
+import re
 import requests
 
 import numpy as np
@@ -93,6 +94,10 @@ class ISS_Position:
         self.__last_comment_index = source_lines.index(comments[-1])
         # Enregistrement des commentaires dans une liste
         self.comments = [comment[7:].strip() for comment in comments]
+        # Recherche par motif des metadonnées inclues dans les commentaires
+        md_comments = re.findall(r"([A-Z_]+)=([0-9\.]+)", '\n'.join(self.comments))
+        # Ajout de ces métadonnées aux dictonnaire des métadonnées
+        self.meta.update({match[0]:float(match[1]) for match in md_comments})
     
     def __parse_data(self, filename):
         """Extraction des données du fichier."""
@@ -125,10 +130,17 @@ class ISS_Position:
         # Renvoi de l'indentifiant actuel
         return self.__current_tid
 
-
-    def get_metadata(self):
-        """Retourne les métadonnées en utilisant un DataFrame (pour son rendu élégant à l'affichage)."""
-        return pd.DataFrame(self.meta.values(), self.meta.keys(), ['Metadata'])
+    def get_metadata(self, key=None):
+        """Accès aux métadonnées.
+        
+        Si une clé est spécifiée et qu'elle existe dans les métadonnées, retourne sa valeur.
+        Si aucune clé n'est fournie, retourne l'ensemble des métadonnées
+        en utilisant un DataFrame (pour son rendu élégant à l'affichage).
+        """
+        if key:
+            return self.meta.get(key)
+        else:
+            return pd.DataFrame(self.meta.values(), self.meta.keys(), ['Metadata'])
     
     def get_comments(self):
         """Retourne les commentaires en tant que bloc de texte avec retours à la ligne."""
