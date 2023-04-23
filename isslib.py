@@ -48,7 +48,7 @@ class ISS_Position:
         """
         if not filename:
             # En l'absence de fichié spécifié, génère le nom de fichier local du jour
-            filename = f"ISS.OEM_J2K_EPH_{pd.Timestamp.today().strftime('%Y%m%d')}.txt"
+            filename = os.path.join("data", f"ISS.OEM_J2K_EPH_{pd.Timestamp.today().strftime('%Y%m%d')}.txt")
             # Télécharge le fichier du jour s'il est absent ou si le téléchargement est forcé
             if force_download or not os.path.exists(filename):
                 self.__download(filename)
@@ -156,17 +156,22 @@ class ISS_Position:
     
     def _repr_html_(self):
         """Représentation riche en HTML de l'objet."""
+        # Représentation en chaine de caracères des dates et heures de début et de fin des données
         start_date = self.meta['START_TIME'].strftime('%d/%m/%Y')
-        stop_date = self.meta['STOP_TIME'].strftime('%d/%m/%Y') 
+        stop_date = self.meta['STOP_TIME'].strftime('%d/%m/%Y')
+        # Représentation HTML avec les dates en titre et le tableau des épisodes de poussées
         return (r"<div style='border:4px #eee outset;background:#fcfcfc;padding:1px 10px 10px'>"
                 fr"<h4 style='padding-left:10px'>Coordonnées de l'ISS du {start_date} au {stop_date}</h4>"
                 fr"{self.__repr_thrust_episode()}</div>")
 
     def __repr_thrust_episode(self):
         """Représentation des épisodes de poussées en tant que DataFrame."""
+        # Dataframe des dates de début et de fin de chaque épisode
         df = pd.DataFrame([self.data.groupby('thrust_episode').min().datetime.rename('Début'),
                            self.data.groupby('thrust_episode').max().datetime.rename('Fin')]).T
+        # Durée des épisodes
         df['Durée'] = df['Fin'] - df['Début']
+        # Réécriture de l'index pour expliciter les épisodes
         df.index = df.index.map(lambda x: f"Episode {x} : " + ("Poussée moteurs" if x%2
                                                                else "Mouvement libre")).rename(None)
         return df.to_html()
@@ -207,6 +212,7 @@ def orbital_visualization():
     yield fig
     # Affichage de la représentation
     fig.show()
+
 
 def celestial2terrestrial(x, y, z, datetime, mode='cartesian'):
     """Transformation de coordonnées depuis le repère celeste vers le repère terrestre.
