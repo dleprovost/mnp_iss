@@ -9,13 +9,16 @@ import astropy.units as units
 
 
 def cartesian2spherical(x, y, z):
-    """Transforme des coordonnées cartésiennes en coordonnées sphériques."""
+    """Transforme des coordonnées cartésiennes en coordonnées sphériques.
+    
+    La convention rayon-longitude-latitude est ici utilisée.
+    """
     # Représentation cartésienne (l'unité est sans importance ici)
     sk_cart = SkyCoord(x, y, z, frame=GCRS, representation_type='cartesian')
     # Représentation sphérique
     sk_sph = sk_cart.represent_as('spherical')
     # Renvoi des longitude et latitudes du point
-    return sk_sph.lon.value, sk_sph.lat.value
+    return sk_sph.distance.value, sk_sph.lon.value, sk_sph.lat.value
 
 
 def celestial2terrestrial(x, y, z, datetime, mode='cartesian'):
@@ -25,7 +28,7 @@ def celestial2terrestrial(x, y, z, datetime, mode='cartesian'):
     que la date et l'heure de la position, nécessaire pour la projeter dans le
     repère terrestre.
     La fonction retourne les coordonnées (x,y,z) dans le repère terrestre,
-    ou les valeurs (longitude, latitude, distance) si le paramètre facultatif
+    ou les valeurs (rayon, longitude, latitude) si le paramètre facultatif
     `mode='spherical'` est utilisé.
     """
     # coordonnées sidérales depuis les données
@@ -38,7 +41,7 @@ def celestial2terrestrial(x, y, z, datetime, mode='cartesian'):
     # Représentation sphérique
     elif mode == 'spherical':
         sph = geo.represent_as('spherical')
-        return sph.lon.degree, sph.lat.degree, sph.distance.value
+        return sph.distance.value, sph.lon.degree, sph.lat.degree
     # Paramètre de représentation incorrect
     else:
         raise ValueError("mode should be either 'cartesian' or 'spherical'.")
