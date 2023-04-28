@@ -15,8 +15,8 @@ import plotly.graph_objects as go
 def orbital():
     """Globle terrestre pour un affichage 3D de positions orbitales."""
     # Rayon terrestre moyen volumétrique
-    earth_radius = 6371
-    # Découpage en 24 méridiens et 60 parallèles
+    earth_radius = 6371  # km
+    # Découpage en 24 méridiens et 60 parallèles (choix cosmétique)
     u, v = np.mgrid[0:2 * np.pi:24j, 0:np.pi:60j]
     # Surface de la Terre
     x, y, z = np.array([np.cos(u) * np.sin(v),
