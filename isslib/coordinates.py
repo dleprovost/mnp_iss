@@ -8,17 +8,25 @@ from astropy.coordinates import GCRS, ITRS, SkyCoord
 import astropy.units as units
 
 
-def cartesian2spherical(x, y, z):
+def cartesian2spherical(x, y, z, unit='rad'):
     """Transforme des coordonnées cartésiennes en coordonnées sphériques.
-    
-    La convention rayon-longitude-latitude est ici utilisée.
+
+    La convention utilisée ici est rayon-longitude-latitude.
     """
-    # Représentation cartésienne (l'unité est sans importance ici)
-    sk_cart = SkyCoord(x, y, z, frame=GCRS, representation_type='cartesian')
+    # Représentation cartésienne
+    sk_cart = SkyCoord(x, y, z, frame=GCRS, unit=units.km,
+                       representation_type='cartesian')
     # Représentation sphérique
     sk_sph = sk_cart.represent_as('spherical')
-    # Renvoi des longitude et latitudes du point
-    return sk_sph.distance.value, sk_sph.lon.value, sk_sph.lat.value
+    # Retourne les distances en km et les longitude et latitudes en radians
+    if unit == 'rad':
+        return sk_sph.distance.km, sk_sph.lon.rad, sk_sph.lat.rad
+    # Retourne les distances en km et les longitude et latitudes en degrés
+    elif unit == 'deg':
+        return sk_sph.distance.km, sk_sph.lon.deg, sk_sph.lat.deg
+    # Paramètre d'unité incorrect
+    else:
+        raise ValueError("unit should be either 'deg' or 'rad'.")
 
 
 def celestial2terrestrial(x, y, z, datetime, mode='cartesian'):
