@@ -5,6 +5,7 @@ isslib.visualization
 Fournit les contextes de représentation graphiques des données.
 """
 from contextlib import contextmanager
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -69,9 +70,10 @@ def worldmap(transparency=.5):
     alpha = min(max(transparency, 0), 1)
     # Visualition sur toute la largeur du notebook
     plt.figure(figsize=(16, 12))
+    # Image de fond
+    bg_img = os.path.join("resources", "plate_carree.jpg")
     # Paramétrage des coordonnées extrêmes de l'image de fond
-    plt.imshow(plt.imread("plate_carree.jpg"), alpha=alpha,
-               extent=[-180, 180, -90, 90])
+    plt.imshow(plt.imread(bg_img), alpha=alpha, extent=[-180, 180, -90, 90])
     # Paramétrage des axes
     plt.xticks(np.arange(-180, 181, 30))
     plt.xlabel("Longitude [°]")
