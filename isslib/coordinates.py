@@ -6,6 +6,7 @@ Fournit les fonctions de conversions de repères et coordonnées.
 """
 from astropy.coordinates import GCRS, ITRS, SkyCoord
 import astropy.units as units
+import numpy as np
 
 
 def cartesian2spherical(x, y, z, unit='rad'):
@@ -53,3 +54,51 @@ def celestial2terrestrial(x, y, z, datetime, mode='cartesian'):
     # Paramètre de représentation incorrect
     else:
         raise ValueError("mode should be either 'cartesian' or 'spherical'.")
+
+
+def worldmap_traces(longitudes, latitudes, join_traces=True):
+    """Séparation de tableaux de longitudes/latitudes en traces planisphère."""
+    # Position des retours arrières
+    crs = np.where(np.diff(longitudes) < -300)[0] + 1
+    # Tableau des débuts de traces
+    line_starts = np.concatenate([[0], crs])
+    # Tableau des fin de traces
+    line_ends = np.concatenate([crs, [len(longitudes)]])
+    # Séparation des traces
+    traces = [(longitudes[start:end], latitudes[start:end])
+              for (start, end) in zip(line_starts, line_ends)]
+    # Si création de traces jointes sur les bords
+    if join_traces:
+        jtraces = [None] * len(traces)
+        for i in range(len(traces)):
+            # Ajout hors-champ de la position précédente à gauche
+            in_lon, in_lat = ((traces[i-1][0][-1:] - 360,
+                               traces[i-1][1][-1:])
+                              if i > 0 else ([], []))
+            # Ajout hors-champ de la position suivante à droite
+            out_lon, out_lat = (([traces[i+1][0][:1] + 360,
+                                  traces[i+1][1][:1]])
+                                if i < len(traces) - 1 else ([], []))
+            # Création des nouvelles traces
+            jtraces[i] = (np.concatenate([in_lon, traces[i][0], out_lon]),
+                          np.concatenate([in_lat, traces[i][1], out_lat]))
+        return jtraces
+    else:
+        return traces
+
+
+def pi_interval(value):
+    """Convertit un angle en radian à son égal dans l'intervalle [-pi;pi[."""
+    # Utilise la position du point relatif dans le cercle complexe
+    return np.angle(complex(np.cos(value), np.sin(value)))
+
+
+def positive_pi(value):
+    """Convertit un angle en radian à son égal dans l'intervalle [0;2*pi[."""
+    # Utilise le modulo 2pi de son égal dans l'intervalle [-pi;pi[
+    return pi_interval(value) % (2*np.pi)
+
+
+# Vectorise les fonctions `pi_interval` et `positive_pi`
+pi_interval = np.vectorize(pi_interval)
+positive_pi = np.vectorize(positive_pi)

@@ -79,6 +79,9 @@ def worldmap(transparency=.5):
     plt.xlabel("Longitude [°]")
     plt.yticks(np.arange(-90, 91, 30))
     plt.ylabel("Latitude [°]")
+    # Empêche les débordement par défaut (redéfinisable à l'utilisation)
+    plt.xlim(-180, 180)
+    plt.ylim(-90, 90)
     # Retour de la fonction pour exécution du bloc `with`
     yield
     # Affichage en sortie du `with`
