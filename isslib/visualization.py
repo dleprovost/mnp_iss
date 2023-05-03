@@ -68,7 +68,7 @@ def worldmap(transparency=.5):
     """
     # Définit alpha comme le complémentaire à 1 de transparency borné à [0,1]
     alpha = min(max(transparency, 0), 1)
-    # Visualition sur toute la largeur du notebook
+    # Visualisation sur toute la largeur du calepin
     plt.figure(figsize=(16, 12))
     # Image de fond
     bg_img = os.path.join("resources", "plate_carree.jpg")
@@ -79,7 +79,7 @@ def worldmap(transparency=.5):
     plt.xlabel("Longitude [°]")
     plt.yticks(np.arange(-90, 91, 30))
     plt.ylabel("Latitude [°]")
-    # Empêche les débordement par défaut (redéfinisable à l'utilisation)
+    # Empêche les débordements par défaut (redéfinissable à l'utilisation)
     plt.xlim(-180, 180)
     plt.ylim(-90, 90)
     # Retour de la fonction pour exécution du bloc `with`
